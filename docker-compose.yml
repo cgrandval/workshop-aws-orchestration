@@ -1,0 +1,34 @@
+version: '3.7'
+services:
+  reverse-proxy:
+    image: traefik:v2.0
+    command: --providers.docker
+    ports:
+      - 80:80
+      - 8080:8080
+      - 443:443
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./traefik.toml:/etc/traefik/traefik.toml
+      - ./acme.json:/acme.json
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.reverse.rule=Host(`qTFNi9uzvG9Y.vincent-monjaret.com`)
+      - traefik.http.services.reverse.loadbalancer.server.port=8080
+      - traefik.http.routers.reverse.middlewares=traefik-auth@file
+  php:
+    image: docker.pkg.github.com/vmonjaret/workshop-aws-api/php:stable
+    env_file:
+      - api.env
+  nginx:
+    image: docker.pkg.github.com/vmonjaret/workshop-aws-api/nginx:stable
+    depends_on:
+      - php
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.api.rule=Host(`api-workshop.vincent-monjaret.com`)
+      - traefik.http.routers.api.entrypoints=web
+      - traefik.http.routers.api.middlewares=redirect@file
+      - traefik.http.routers.api-secured.rule=Host(`api-workshop.vincent-monjaret.com`)
+      - traefik.http.routers.api-secured.entrypoints=web-secure
+      - traefik.http.routers.api-secured.tls.certresolver=workshop

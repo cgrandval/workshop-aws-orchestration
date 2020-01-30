@@ -1,0 +1,26 @@
+[api]
+dashboard = true
+insecure = true
+[providers.docker]
+endpoint = "unix:///var/run/docker.sock"
+exposedByDefault = false
+[providers.file]
+filename = "/etc/traefik/traefik.toml"
+[entryPoints]
+    [entryPoints.web]
+        address = ":80"
+    [entryPoints.web-secure]
+        address = ":443"
+[certificatesResolvers.workshop.acme]
+    email = "vmonjaret@gmail.com"
+    storage = "/acme.json"
+    [certificatesResolvers.workshop.acme.tlsChallenge]
+[http.middlewares]
+    [http.middlewares.traefik-auth.basicAuth]
+        users = [
+            "vmonjaret:$apr1$rd4b3gxi$jLe.7078Qkq8L9ZEuImHH/",
+        ]
+    [http.middlewares.redirect.redirectScheme]
+        scheme = "https"
+
+
